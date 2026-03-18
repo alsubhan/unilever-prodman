@@ -65,13 +65,14 @@ export default function ProductionPlanningPage() {
   };
 
   const handleAction = async (plan, action) => {
-    const labels = { pending_approval:'Submit for Approval', approved:'Approve', draft:'Reject (Back to Draft)', cancelled:'Cancel' };
-    if (!confirm(`${labels[action] || action} plan #${plan.id}?`)) return;
+    const labels = { pending_approval:'Submit for Approval', approved:'Approve', draft:'Reject (Back to Draft)', cancelled:'Cancel', completed:'Mark as Completed' };
+    if (!window.confirm(`${labels[action] || action} plan #${plan.id}?`)) return;
     try {
       if (action === 'pending_approval') await api.submitPlan(plan.id);
       else if (action === 'approved') await api.approvePlan(plan.id);
       else if (action === 'draft') await api.rejectPlan(plan.id);
       else if (action === 'cancelled') await api.cancelPlan(plan.id);
+      else if (action === 'completed') await api.completePlan(plan.id);
       await load();
     } catch (err) { alert(err.message); }
   };
@@ -126,8 +127,8 @@ export default function ProductionPlanningPage() {
                     <div style={{ display:'flex', gap:'4px', flexWrap:'wrap' }}>
                       {(STATUS_FLOW[plan.status] || []).map(nextStatus => {
                         if (nextStatus === 'approved' && !isManager) return null;
-                        const btnMap = { pending_approval:'Submit', approved:'✅ Approve', draft:'❌ Reject', cancelled:'🚫 Cancel' };
-                        const clsMap = { approved:'btn-success', draft:'btn-warning', cancelled:'btn-danger', pending_approval:'btn-primary' };
+                        const btnMap = { pending_approval:'Submit', approved:'✅ Approve', draft:'❌ Reject', cancelled:'🚫 Cancel', completed:'✅ Complete' };
+                        const clsMap = { approved:'btn-success', draft:'btn-warning', cancelled:'btn-danger', pending_approval:'btn-primary', completed:'btn-success' };
                         return (
                           <button key={nextStatus} className={`btn btn-sm ${clsMap[nextStatus]||'btn-secondary'}`}
                             onClick={() => handleAction(plan, nextStatus)}>
