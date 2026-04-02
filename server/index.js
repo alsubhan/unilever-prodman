@@ -37,6 +37,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🚀 Production Management Server running at http://localhost:${PORT}`);
+  console.log(`\n🚀 HUL ProdMan Server running at http://localhost:${PORT}`);
   console.log(`📋 API available at http://localhost:${PORT}/api`);
 });

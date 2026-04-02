@@ -1,5 +1,5 @@
 {
-  "name": "production-management-server",
+  "name": "hul-prodman-server",
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
