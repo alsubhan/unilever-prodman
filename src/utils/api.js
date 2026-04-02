@@ -31,16 +31,26 @@ export const api = {
   createUser: (data) => request('POST', '/users', data),
   updateUser: (id, data) => request('PUT', `/users/${id}`, data),
   deleteUser: (id) => request('DELETE', `/users/${id}`),
-  // Raw Materials
-  getRawMaterials: () => request('GET', '/raw-materials'),
-  createRawMaterial: (data) => request('POST', '/raw-materials', data),
-  updateRawMaterial: (id, data) => request('PUT', `/raw-materials/${id}`, data),
-  deleteRawMaterial: (id) => request('DELETE', `/raw-materials/${id}`),
+  // Packing Materials
+  getPackingMaterials: () => request('GET', '/packing-materials'),
+  createPackingMaterial: (data) => request('POST', '/packing-materials', data),
+  updatePackingMaterial: (id, data) => request('PUT', `/packing-materials/${id}`, data),
+  deletePackingMaterial: (id) => request('DELETE', `/packing-materials/${id}`),
+  // Finished Goods
+  getFinishedGoods: () => request('GET', '/finished-goods'),
+  createFinishedGood: (data) => request('POST', '/finished-goods', data),
+  updateFinishedGood: (id, data) => request('PUT', `/finished-goods/${id}`, data),
+  deleteFinishedGood: (id) => request('DELETE', `/finished-goods/${id}`),
   // Packing Machines
   getPackingMachines: () => request('GET', '/packing-machines'),
   createPackingMachine: (data) => request('POST', '/packing-machines', data),
   updatePackingMachine: (id, data) => request('PUT', `/packing-machines/${id}`, data),
   deletePackingMachine: (id) => request('DELETE', `/packing-machines/${id}`),
+  // Shifts
+  getShifts: () => request('GET', '/shifts'),
+  createShift: (data) => request('POST', '/shifts', data),
+  updateShift: (id, data) => request('PUT', `/shifts/${id}`, data),
+  deleteShift: (id) => request('DELETE', `/shifts/${id}`),
   // Access Rights
   getAccessRights: () => request('GET', '/access-rights'),
   updateAccessRight: (data) => request('PUT', '/access-rights', data),
@@ -54,16 +64,16 @@ export const api = {
   cancelPlan: (id) => request('POST', `/production-plans/${id}/cancel`),
   completePlan: (id) => request('POST', `/production-plans/${id}/complete`),
   // Scan
-  validateScan: (machine_barcode, material_barcode) => request('POST', '/scan/validate', { machine_barcode, material_barcode }),
+  validateScan: (machine_barcode, fg_barcode, material_barcode) => request('POST', '/scan/validate', { machine_barcode, fg_barcode, material_barcode }),
   getMachineInfo: (code) => request('GET', `/scan/machine/${code}`),
   getScanHistory: (params = {}) => {
     const q = new URLSearchParams(params).toString();
     return request('GET', `/scan/history${q ? '?' + q : ''}`);
   },
   // Reports
-  getRawMaterialUsage: (params = {}) => {
+  getPackingMaterialUsage: (params = {}) => {
     const q = new URLSearchParams(params).toString();
-    return request('GET', `/reports/raw-material-usage${q ? '?' + q : ''}`);
+    return request('GET', `/reports/packing-material-usage${q ? '?' + q : ''}`);
   },
   getDashboard: () => request('GET', '/reports/dashboard'),
   // Utility

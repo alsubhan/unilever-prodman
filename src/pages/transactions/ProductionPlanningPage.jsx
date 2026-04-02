@@ -15,18 +15,35 @@ export default function ProductionPlanningPage() {
   const [plans, setPlans] = useState([]);
   const [machines, setMachines] = useState([]);
   const [materials, setMaterials] = useState([]);
+  const [fgs, setFgs] = useState([]);
+  const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ machine_id:'', raw_material_id:'', start_datetime:'', end_datetime:'', notes:'' });
+  const [form, setForm] = useState({ machine_id:'', finished_goods_id:'', shift_id:'', batch_number:'', start_datetime:'', end_datetime:'', notes:'' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
 
   const load = async () => {
-    const [p, m, rm] = await Promise.all([api.getProductionPlans(), api.getPackingMachines(), api.getRawMaterials()]);
-    setPlans(p); setMachines(m.filter(m => m.is_active)); setMaterials(rm.filter(r => r.is_active));
-    setLoading(false);
+    try {
+      const [p, m, rm, fg, sh] = await Promise.all([
+        api.getProductionPlans(),
+        api.getPackingMachines(),
+        api.getPackingMaterials(),
+        api.getFinishedGoods(),
+        api.getShifts()
+      ]);
+      setPlans(p);
+      setMachines(m.filter(m => m.is_active));
+      setMaterials(rm.filter(r => r.is_active));
+      setFgs(fg.filter(f => f.is_active));
+      setShifts(sh.filter(s => s.is_active));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
 
@@ -40,7 +57,7 @@ export default function ProductionPlanningPage() {
     const start = new Date(now.getTime() + 60 * 60000);
     const end = new Date(now.getTime() + 9 * 60 * 60000);
     setForm({
-      machine_id: '', raw_material_id: '',
+      machine_id: '', finished_goods_id: '', shift_id: '', batch_number: '',
       start_datetime: start.toISOString().slice(0,16),
       end_datetime: end.toISOString().slice(0,16),
       notes: ''
@@ -49,7 +66,15 @@ export default function ProductionPlanningPage() {
   };
   const openEdit = (plan) => {
     setEditing(plan);
-    setForm({ machine_id:plan.machine_id, raw_material_id:plan.raw_material_id, start_datetime:plan.start_datetime.slice(0,16), end_datetime:plan.end_datetime.slice(0,16), notes:plan.notes||'' });
+    setForm({
+      machine_id: plan.machine_id,
+      finished_goods_id: plan.finished_goods_id || '',
+      shift_id: plan.shift_id || '',
+      batch_number: plan.batch_number || '',
+      start_datetime: plan.start_datetime.slice(0, 16),
+      end_datetime: plan.end_datetime.slice(0, 16),
+      notes: plan.notes || ''
+    });
     setError(''); setShowModal(true);
   };
 
@@ -106,7 +131,7 @@ export default function ProductionPlanningPage() {
         <div className="table-wrapper">
           <table className="table">
             <thead><tr>
-              <th>#</th><th>Machine</th><th>Raw Material</th><th>Start</th><th>End</th><th>Status</th><th>Created By</th><th>Approved By</th><th>Actions</th>
+              <th>#</th><th>Machine</th><th>FG & Shift</th><th>Batch #</th><th>Schedule</th><th>Status</th><th>Actions</th>
             </tr></thead>
             <tbody>
               {loading && <tr><td colSpan={9} style={{ textAlign:'center', padding:'40px', color:'var(--text-muted)' }}>Loading...</td></tr>}
@@ -114,18 +139,28 @@ export default function ProductionPlanningPage() {
                 <tr key={plan.id}>
                   <td><strong>#{plan.id}</strong></td>
                   <td>
-                    <div><strong>{plan.machine_name}</strong></div>
-                    <code style={{ fontSize:'0.7rem', color:'var(--accent)' }}>{plan.machine_code}</code>
+                    {plan.finished_goods_id ? (
+                      <div>
+                        <div className="badge badge-indigo text-xs" style={{ marginBottom: '4px' }}>FG</div>
+                        <div><strong>{plan.finished_good_name}</strong></div>
+                        <code style={{ fontSize: '0.7rem', color: 'var(--accent)' }}>{plan.finished_good_part_number}</code>
+                        {plan.shift_name && (
+                          <div style={{ marginTop:'6px' }}>
+                            <span className="badge badge-cyan text-xs">🕒 {plan.shift_name}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-danger text-xs italic">⚠️ FG Missing</div>
+                    )}
                   </td>
+                  <td><code className="text-sm">{plan.batch_number || '—'}</code></td>
                   <td>
-                    <div>{plan.raw_material_name}</div>
-                    <code style={{ fontSize:'0.7rem', color:'var(--text-muted)' }}>{plan.part_number}</code>
+                    <div className="text-sm">
+                      <div>Start: {new Date(plan.start_datetime).toLocaleString('en-GB', {dateStyle:'short', timeStyle:'short'})}</div>
+                      <div className="text-muted">End: {new Date(plan.end_datetime).toLocaleString('en-GB', {dateStyle:'short', timeStyle:'short'})}</div>
+                    </div>
                   </td>
-                  <td className="text-sm">{new Date(plan.start_datetime).toLocaleString('en-GB', {dateStyle:'short',timeStyle:'short'})}</td>
-                  <td className="text-sm">{new Date(plan.end_datetime).toLocaleString('en-GB', {dateStyle:'short',timeStyle:'short'})}</td>
-                  <td><span className={`badge ${STATUS_COLORS[plan.status]}`} style={{ textTransform:'capitalize' }}>{plan.status.replace('_',' ')}</span></td>
-                  <td className="text-muted text-sm">{plan.created_by_name||'—'}</td>
-                  <td className="text-muted text-sm">{plan.approved_by_name||'—'}</td>
                   <td>
                     <div style={{ display:'flex', gap:'4px', flexWrap:'wrap' }}>
                       {(STATUS_FLOW[plan.status] || []).map(nextStatus => {
@@ -156,7 +191,7 @@ export default function ProductionPlanningPage() {
 
       <div className="alert alert-info mt-4">
         <span>ℹ️</span>
-        <span>Workflow: <strong>Draft</strong> → <strong>Pending Approval</strong> → <strong>Approved</strong> (by Production Manager) → <strong>In Progress</strong> (auto on first scan) → <strong>Completed</strong>. Any changes to approved plans require re-approval.</span>
+        <span>Workflow: <strong>Draft</strong> → <strong>Pending Approval</strong> → <strong>Approved</strong> (by Shift Operator) → <strong>In Progress</strong> (auto on first scan) → <strong>Completed</strong>. Any changes to approved plans require re-approval.</span>
       </div>
 
       {showModal && (
@@ -177,10 +212,23 @@ export default function ProductionPlanningPage() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Raw Material</label>
-                  <select className="form-select" value={form.raw_material_id} onChange={e => setForm({...form, raw_material_id:e.target.value})} required>
-                    <option value="">— Select Raw Material —</option>
-                    {materials.map(m => <option key={m.id} value={m.id}>{m.name} ({m.part_number})</option>)}
+                  <label className="form-label">Batch Number</label>
+                  <input className="form-input" value={form.batch_number} onChange={e => setForm({...form, batch_number:e.target.value})} placeholder="e.g. B240402-1" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Finished Good</label>
+                  <select className="form-select" value={form.finished_goods_id} onChange={e => setForm({...form, finished_goods_id:e.target.value})} required>
+                    <option value="">— Select Finished Good —</option>
+                    {fgs.map(fg => <option key={fg.id} value={fg.id}>{fg.name} ({fg.part_number})</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Shift</label>
+                  <select className="form-select" value={form.shift_id} onChange={e => setForm({...form, shift_id:e.target.value})} required>
+                    <option value="">— Select Shift —</option>
+                    {shifts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.start_time}-{s.end_time})</option>)}
                   </select>
                 </div>
               </div>

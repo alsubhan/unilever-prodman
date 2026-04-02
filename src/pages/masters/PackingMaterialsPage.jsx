@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 
-export default function RawMaterialsPage() {
+export default function PackingMaterialsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -11,7 +11,7 @@ export default function RawMaterialsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const load = () => api.getRawMaterials().then(setItems).catch(console.error).finally(() => setLoading(false));
+  const load = () => api.getPackingMaterials().then(setItems).catch(console.error).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
   const filtered = items.filter(i =>
@@ -37,8 +37,8 @@ export default function RawMaterialsPage() {
     setSaving(true);
     setError('');
     try {
-      if (editing) await api.updateRawMaterial(editing.id, form);
-      else await api.createRawMaterial(form);
+      if (editing) await api.updatePackingMaterial(editing.id, form);
+      else await api.createPackingMaterial(form);
       await load();
       setShowModal(false);
     } catch (err) { setError(err.message); }
@@ -46,22 +46,22 @@ export default function RawMaterialsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this raw material?')) return;
-    try { await api.deleteRawMaterial(id); await load(); } catch (err) { alert(err.message); }
+    if (!confirm('Delete this packing material?')) return;
+    try { await api.deletePackingMaterial(id); await load(); } catch (err) { alert(err.message); }
   };
 
   const handleToggle = async (item) => {
-    try { await api.updateRawMaterial(item.id, { is_active: item.is_active ? 0 : 1 }); await load(); } catch (err) { alert(err.message); }
+    try { await api.updatePackingMaterial(item.id, { is_active: item.is_active ? 0 : 1 }); await load(); } catch (err) { alert(err.message); }
   };
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Raw Material Master</h1>
-          <p className="page-subtitle">Manage raw materials and part numbers</p>
+          <h1 className="page-title">Packing Material Master</h1>
+          <p className="page-subtitle">Manage packing materials and part numbers</p>
         </div>
-        <button id="create-rm-btn" className="btn btn-primary" onClick={openCreate}>+ Add Raw Material</button>
+        <button id="create-pm-btn" className="btn btn-primary" onClick={openCreate}>+ Add Packing Material</button>
       </div>
 
       <div className="card">
@@ -96,7 +96,7 @@ export default function RawMaterialsPage() {
                 </tr>
               ))}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={6} style={{ textAlign:'center', padding:'40px', color:'var(--text-muted)' }}>No raw materials found</td></tr>
+                <tr><td colSpan={6} style={{ textAlign:'center', padding:'40px', color:'var(--text-muted)' }}>No packing materials found</td></tr>
               )}
             </tbody>
           </table>
@@ -107,7 +107,7 @@ export default function RawMaterialsPage() {
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
           <div className="modal">
             <div className="modal-header">
-              <h3 className="modal-title">{editing ? 'Edit Raw Material' : 'Add Raw Material'}</h3>
+              <h3 className="modal-title">{editing ? 'Edit Packing Material' : 'Add Packing Material'}</h3>
               <button className="btn btn-sm btn-secondary btn-icon" onClick={() => setShowModal(false)}>✕</button>
             </div>
             {error && <div className="alert alert-error" style={{ marginBottom:'16px' }}>⚠️ {error}</div>}
@@ -115,7 +115,7 @@ export default function RawMaterialsPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Part Number (Barcode)</label>
-                  <input className="form-input" value={form.part_number} onChange={e => setForm({...form, part_number:e.target.value})} required placeholder="RM-001" />
+                  <input className="form-input" value={form.part_number} onChange={e => setForm({...form, part_number:e.target.value})} required placeholder="PM-001" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Unit</label>

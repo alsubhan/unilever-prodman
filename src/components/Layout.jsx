@@ -6,9 +6,11 @@ const NAV = [
     { to: '/dashboard', icon: '📊', label: 'Dashboard' }
   ]},
   { section: 'Masters', items: [
-    { to: '/masters/users', icon: '👥', label: 'User Master', roles: ['admin'] },
-    { to: '/masters/raw-materials', icon: '🧪', label: 'Raw Materials' },
+    { to: '/masters/users', icon: '👥', label: 'Users', roles: ['admin'] },
+    { to: '/masters/finished-goods', icon: '🏷️', label: 'Finished Goods' },
+    { to: '/masters/packing-materials', icon: '📦', label: 'Packing Materials' },
     { to: '/masters/packing-machines', icon: '⚙️', label: 'Packing Machines' },
+    { to: '/masters/shifts', icon: '🕒', label: 'Shifts' },
     { to: '/masters/access-rights', icon: '🔐', label: 'Access Rights', roles: ['admin'] },
   ]},
   { section: 'Transactions', items: [
@@ -16,7 +18,7 @@ const NAV = [
     { to: '/scan', icon: '📱', label: 'Scanner (Mobile)', external: true },
   ]},
   { section: 'Reports', items: [
-    { to: '/reports/raw-material-usage', icon: '📈', label: 'RM Usage Report' },
+    { to: '/reports/packing-material-usage', icon: '📈', label: 'PM Usage Report' },
   ]},
   { section: 'Utility', items: [
     { to: '/utility/backup', icon: '💾', label: 'Backup Database', roles: ['admin'] },
@@ -41,8 +43,8 @@ export default function Layout() {
       <aside className="sidebar">
         <div className="sidebar-logo">
           <div className="logo-icon">🏭</div>
-          <div className="logo-title">Production Management</div>
-          <div className="logo-sub">System v1.0</div>
+          <div className="logo-title">HUL ProdMan</div>
+          <div className="logo-sub">ProdMan v1.0</div>
         </div>
 
         <nav style={{ flex: 1, paddingBottom: '16px' }}>

@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 
 const ROLES = ['admin', 'production_manager', 'operator', 'viewer'];
+const ROLE_LABELS = {
+  admin: 'Admin',
+  production_manager: 'Shift Operator',
+  operator: 'Dumping Operator',
+  viewer: 'Viewer',
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -64,7 +70,7 @@ export default function UsersPage() {
 
   const roleBadge = (role) => {
     const map = { admin: 'badge-red', production_manager: 'badge-orange', operator: 'badge-blue', viewer: 'badge-gray' };
-    return <span className={`badge ${map[role] || 'badge-gray'}`}>{role.replace('_', ' ')}</span>;
+    return <span className={`badge ${map[role] || 'badge-gray'}`}>{ROLE_LABELS[role] || role.replace('_', ' ')}</span>;
   };
 
   return (
@@ -149,7 +155,7 @@ export default function UsersPage() {
               <div className="form-group">
                 <label className="form-label">Role</label>
                 <select className="form-select" value={form.role} onChange={e => setForm({...form, role:e.target.value})}>
-                  {ROLES.map(r => <option key={r} value={r}>{r.replace('_',' ')}</option>)}
+                  {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r] || r.replace('_',' ')}</option>)}
                 </select>
               </div>
               <div className="modal-footer">

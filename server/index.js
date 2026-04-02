@@ -13,8 +13,10 @@ app.use(fileUpload({ limits: { fileSize: 100 * 1024 * 1024 } }));
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
-app.use('/api/raw-materials', require('./routes/rawMaterials'));
+app.use('/api/finished-goods', require('./routes/finishedGoods'));
+app.use('/api/packing-materials', require('./routes/packingMaterials'));
 app.use('/api/packing-machines', require('./routes/packingMachines'));
+app.use('/api/shifts', require('./routes/shifts'));
 app.use('/api/access-rights', require('./routes/accessRights'));
 app.use('/api/production-plans', require('./routes/productionPlans'));
 app.use('/api/scan', require('./routes/scan'));

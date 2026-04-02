@@ -10,12 +10,14 @@ router.get('/', authMiddleware, async (req, res) => {
   const plans = await db.all(`
     SELECT pp.*,
       pm.name as machine_name, pm.machine_code,
-      rm.name as raw_material_name, rm.part_number,
+      fg.name as finished_good_name, fg.part_number as finished_good_part_number,
+      s.name as shift_name,
       u1.full_name as created_by_name,
       u2.full_name as approved_by_name
     FROM production_plans pp
     LEFT JOIN packing_machines pm ON pp.machine_id = pm.id
-    LEFT JOIN raw_materials rm ON pp.raw_material_id = rm.id
+    LEFT JOIN finished_goods fg ON pp.finished_goods_id = fg.id
+    LEFT JOIN shifts s ON pp.shift_id = s.id
     LEFT JOIN users u1 ON pp.created_by = u1.id
     LEFT JOIN users u2 ON pp.approved_by = u2.id
     ORDER BY pp.created_at DESC
@@ -26,9 +28,9 @@ router.get('/', authMiddleware, async (req, res) => {
 // POST create production plan
 router.post('/', authMiddleware, requireRole('admin', 'production_manager', 'operator'), async (req, res) => {
   const db = await getDb();
-  const { machine_id, raw_material_id, start_datetime, end_datetime, notes } = req.body;
-  if (!machine_id || !raw_material_id || !start_datetime || !end_datetime) {
-    return res.status(400).json({ error: 'machine_id, raw_material_id, start_datetime, end_datetime are required' });
+  const { machine_id, finished_goods_id, shift_id, batch_number, start_datetime, end_datetime, notes } = req.body;
+  if (!machine_id || !finished_goods_id || !start_datetime || !end_datetime) {
+    return res.status(400).json({ error: 'machine_id, finished_goods_id, start_datetime, end_datetime are required' });
   }
   if (new Date(end_datetime) <= new Date(start_datetime)) {
     return res.status(400).json({ error: 'End datetime must be after start datetime' });
@@ -44,8 +46,8 @@ router.post('/', authMiddleware, requireRole('admin', 'production_manager', 'ope
     return res.status(409).json({ error: 'Machine already has an approved/active production plan during this period' });
   }
 
-  const result = await db.run('INSERT INTO production_plans (machine_id, raw_material_id, start_datetime, end_datetime, notes, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    machine_id, raw_material_id, start_datetime, end_datetime, notes || '', 'draft', req.user.id);
+  const result = await db.run('INSERT INTO production_plans (machine_id, finished_goods_id, shift_id, packing_material_id, batch_number, start_datetime, end_datetime, notes, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    machine_id, finished_goods_id, shift_id || null, null, batch_number || '', start_datetime, end_datetime, notes || '', 'draft', req.user.id);
   res.status(201).json({ id: result.lastID });
 });
 
@@ -55,12 +57,14 @@ router.get('/:id', authMiddleware, async (req, res) => {
   const plan = await db.get(`
     SELECT pp.*,
       pm.name as machine_name, pm.machine_code,
-      rm.name as raw_material_name, rm.part_number,
+      fg.name as finished_good_name, fg.part_number as finished_good_part_number,
+      s.name as shift_name,
       u1.full_name as created_by_name,
       u2.full_name as approved_by_name
     FROM production_plans pp
     LEFT JOIN packing_machines pm ON pp.machine_id = pm.id
-    LEFT JOIN raw_materials rm ON pp.raw_material_id = rm.id
+    LEFT JOIN finished_goods fg ON pp.finished_goods_id = fg.id
+    LEFT JOIN shifts s ON pp.shift_id = s.id
     LEFT JOIN users u1 ON pp.created_by = u1.id
     LEFT JOIN users u2 ON pp.approved_by = u2.id
     WHERE pp.id = ?
@@ -72,14 +76,14 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // PUT update plan — only drafts can be edited freely; approved ones need re-approval
 router.put('/:id', authMiddleware, requireRole('admin', 'production_manager'), async (req, res) => {
   const db = await getDb();
-  const { machine_id, raw_material_id, start_datetime, end_datetime, notes } = req.body;
+  const { machine_id, finished_goods_id, shift_id, batch_number, start_datetime, end_datetime, notes } = req.body;
   const plan = await db.get('SELECT * FROM production_plans WHERE id = ?', req.params.id);
   if (!plan) return res.status(404).json({ error: 'Not found' });
   if (!['draft', 'pending_approval'].includes(plan.status)) {
     return res.status(400).json({ error: 'Only draft or pending_approval plans can be edited. Approved plans require re-approval workflow.' });
   }
-  await db.run(`UPDATE production_plans SET machine_id=?, raw_material_id=?, start_datetime=?, end_datetime=?, notes=?, status='draft', approved_by=NULL, approved_at=NULL, updated_at=datetime('now') WHERE id=?`,
-    machine_id ?? plan.machine_id, raw_material_id ?? plan.raw_material_id, start_datetime ?? plan.start_datetime, end_datetime ?? plan.end_datetime, notes ?? plan.notes, req.params.id);
+  await db.run(`UPDATE production_plans SET machine_id=?, finished_goods_id=?, shift_id=?, batch_number=?, start_datetime=?, end_datetime=?, notes=?, status='draft', approved_by=NULL, approved_at=NULL, updated_at=datetime('now') WHERE id=?`,
+    machine_id ?? plan.machine_id, finished_goods_id ?? plan.finished_goods_id, shift_id ?? plan.shift_id, batch_number ?? plan.batch_number, start_datetime ?? plan.start_datetime, end_datetime ?? plan.end_datetime, notes ?? plan.notes, req.params.id);
   res.json({ success: true });
 });
 

@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 
-export default function RawMaterialUsagePage() {
+export default function PackingMaterialUsagePage() {
   const [data, setData] = useState(null);
   const [machines, setMachines] = useState([]);
   const [materials, setMaterials] = useState([]);
-  const [filters, setFilters] = useState({ from_date:'', to_date:'', machine_id:'', raw_material_id:'' });
+  const [filters, setFilters] = useState({ from_date:'', to_date:'', machine_id:'', packing_material_id:'' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     api.getPackingMachines().then(m => setMachines(m));
-    api.getRawMaterials().then(r => setMaterials(r));
+    api.getPackingMaterials().then(r => setMaterials(r));
     handleSearch();
   }, []);
 
@@ -22,8 +22,8 @@ export default function RawMaterialUsagePage() {
       if (filters.from_date) params.from_date = filters.from_date;
       if (filters.to_date) params.to_date = filters.to_date;
       if (filters.machine_id) params.machine_id = filters.machine_id;
-      if (filters.raw_material_id) params.raw_material_id = filters.raw_material_id;
-      const res = await api.getRawMaterialUsage(params);
+      if (filters.packing_material_id) params.packing_material_id = filters.packing_material_id;
+      const res = await api.getPackingMaterialUsage(params);
       setData(res);
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
@@ -36,21 +36,21 @@ export default function RawMaterialUsagePage() {
       new Date(r.scanned_at).toLocaleString(),
       r.machine_name, r.machine_code,
       r.expected_material, r.expected_part_number,
-      r.scanned_raw_material_barcode,
+      r.scanned_packing_material_barcode,
       r.is_valid ? 'YES' : 'NO',
       r.operator_name || ''
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type:'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `rm-usage-${Date.now()}.csv`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `pm-usage-${Date.now()}.csv`; a.click();
   };
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h1 className="page-title">Raw Material Usage Report</h1>
+          <h1 className="page-title">Packing Material Usage Report</h1>
           <p className="page-subtitle">Track all scan validations and material usage</p>
         </div>
         <button className="btn btn-secondary" onClick={handleExportCSV} disabled={!data?.rows?.length}>⬇ Export CSV</button>
@@ -76,8 +76,8 @@ export default function RawMaterialUsagePage() {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Raw Material</label>
-              <select className="form-select" value={filters.raw_material_id} onChange={e => setFilters({...filters, raw_material_id:e.target.value})}>
+              <label className="form-label">Packing Material</label>
+              <select className="form-select" value={filters.packing_material_id} onChange={e => setFilters({...filters, packing_material_id:e.target.value})}>
                 <option value="">All Materials</option>
                 {materials.map(m => <option key={m.id} value={m.id}>{m.name} ({m.part_number})</option>)}
               </select>
@@ -118,7 +118,7 @@ export default function RawMaterialUsagePage() {
                         <div>{row.expected_material||'—'}</div>
                         <code style={{ fontSize:'0.7rem', color:'var(--accent)' }}>{row.expected_part_number}</code>
                       </td>
-                      <td><code style={{ color: row.is_valid ? 'var(--success)' : 'var(--danger)' }}>{row.scanned_raw_material_barcode}</code></td>
+                      <td><code style={{ color: row.is_valid ? 'var(--success)' : 'var(--danger)' }}>{row.scanned_packing_material_barcode}</code></td>
                       <td>
                         {row.is_valid
                           ? <span className="badge badge-green">✅ Valid</span>

@@ -2,9 +2,15 @@ import { useState, useEffect } from 'react';
 import api from '../../utils/api';
 
 const ROLES = ['admin', 'production_manager', 'operator', 'viewer'];
+const ROLE_LABELS = {
+  admin: 'Admin',
+  production_manager: 'Shift Operator',
+  operator: 'Dumping Operator',
+  viewer: 'Viewer',
+};
 const MODULES = [
   { key:'users', label:'User Master' },
-  { key:'raw_materials', label:'Raw Materials' },
+  { key:'packing_materials', label:'Packing Materials' },
   { key:'packing_machines', label:'Packing Machines' },
   { key:'access_rights', label:'Access Rights' },
   { key:'production_planning', label:'Production Planning' },
@@ -67,7 +73,7 @@ export default function AccessRightsPage() {
                   {ROLES.map(role => (
                     <th key={role} colSpan={5} style={{ textAlign:'center', borderLeft:'1px solid var(--border)' }}>
                       <span className={`badge ${role === 'admin' ? 'badge-red' : role === 'production_manager' ? 'badge-orange' : role === 'operator' ? 'badge-blue' : 'badge-gray'}`}>
-                        {role.replace('_', ' ')}
+                        {ROLE_LABELS[role] || role.replace('_', ' ')}
                       </span>
                     </th>
                   ))}

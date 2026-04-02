@@ -133,14 +133,14 @@ export default function Dashboard() {
           <div className="table-wrapper">
             <table className="table">
               <thead><tr>
-                <th>#</th><th>Machine</th><th>Raw Material</th><th>Start</th><th>End</th><th>Status</th>
+                <th>#</th><th>Machine</th><th>Packing Material</th><th>Start</th><th>End</th><th>Status</th>
               </tr></thead>
               <tbody>
                 {recentPlans.map(plan => (
                   <tr key={plan.id}>
                     <td><strong>#{plan.id}</strong></td>
                     <td>{plan.machine_name}</td>
-                    <td>{plan.raw_material_name}</td>
+                    <td>{plan.packing_material_name}</td>
                     <td className="text-sm">{new Date(plan.start_datetime).toLocaleString('en-GB', {dateStyle:'short',timeStyle:'short'})}</td>
                     <td className="text-sm">{new Date(plan.end_datetime).toLocaleString('en-GB', {dateStyle:'short',timeStyle:'short'})}</td>
                     <td><span className={`badge ${STATUS_BADGE[plan.status]}`} style={{ textTransform:'capitalize' }}>{plan.status.replace('_',' ')}</span></td>

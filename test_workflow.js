@@ -26,7 +26,7 @@ async function runWorkflowTest() {
 
   // 2. Fetch dependencies
   const machines = await (await fetch(`${BASE_URL}/packing-machines`, { headers: authHeaders })).json();
-  const materials = await (await fetch(`${BASE_URL}/raw-materials`, { headers: authHeaders })).json();
+  const materials = await (await fetch(`${BASE_URL}/packing-materials`, { headers: authHeaders })).json();
   
   if (!machines.length || !materials.length) throw new Error('Need at least 1 machine and 1 material');
   const machine = machines[0];
@@ -43,7 +43,7 @@ async function runWorkflowTest() {
     headers: authHeaders,
     body: JSON.stringify({
       machine_id: machine.id,
-      raw_material_id: material.id,
+      packing_material_id: material.id,
       start_datetime: now.toISOString(),
       end_datetime: later.toISOString(),
       notes: 'Test end-to-end workflow'

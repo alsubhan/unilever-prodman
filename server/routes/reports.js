@@ -4,10 +4,10 @@ const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Raw material usage report
-router.get('/raw-material-usage', authMiddleware, async (req, res) => {
+// Packing material usage report
+router.get('/packing-material-usage', authMiddleware, async (req, res) => {
   const db = await getDb();
-  const { from_date, to_date, machine_id, raw_material_id } = req.query;
+  const { from_date, to_date, machine_id, packing_material_id } = req.query;
 
   let query = `
     SELECT
@@ -16,13 +16,13 @@ router.get('/raw-material-usage', authMiddleware, async (req, res) => {
       pm.machine_code,
       rm.name as expected_material,
       rm.part_number as expected_part_number,
-      sv.scanned_raw_material_barcode,
+      sv.scanned_packing_material_barcode,
       sv.is_valid,
       u.full_name as operator_name,
       pp.id as plan_id
     FROM scan_validations sv
     LEFT JOIN packing_machines pm ON sv.machine_id = pm.id
-    LEFT JOIN raw_materials rm ON sv.expected_raw_material_id = rm.id
+    LEFT JOIN packing_materials rm ON sv.expected_packing_material_id = rm.id
     LEFT JOIN users u ON sv.scanned_by = u.id
     LEFT JOIN production_plans pp ON sv.production_plan_id = pp.id
     WHERE 1=1
@@ -31,7 +31,7 @@ router.get('/raw-material-usage', authMiddleware, async (req, res) => {
   if (from_date) { query += ' AND sv.scanned_at >= ?'; params.push(from_date); }
   if (to_date) { query += ' AND sv.scanned_at <= ?'; params.push(to_date + 'T23:59:59'); }
   if (machine_id) { query += ' AND sv.machine_id = ?'; params.push(machine_id); }
-  if (raw_material_id) { query += ' AND sv.expected_raw_material_id = ?'; params.push(raw_material_id); }
+  if (packing_material_id) { query += ' AND sv.expected_packing_material_id = ?'; params.push(packing_material_id); }
   query += ' ORDER BY sv.scanned_at DESC LIMIT 1000';
 
   try {
@@ -79,10 +79,10 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     // Recent plans
     const recentPlans = await db.all(`
       SELECT pp.id, pp.status, pp.start_datetime, pp.end_datetime,
-        pm.name as machine_name, rm.name as raw_material_name
+        pm.name as machine_name, rm.name as packing_material_name
       FROM production_plans pp
       LEFT JOIN packing_machines pm ON pp.machine_id = pm.id
-      LEFT JOIN raw_materials rm ON pp.raw_material_id = rm.id
+      LEFT JOIN packing_materials rm ON pp.packing_material_id = rm.id
       ORDER BY pp.created_at DESC LIMIT 5
     `);
 
